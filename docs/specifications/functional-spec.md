@@ -1,6 +1,6 @@
 # Functional specification
 
-What `migadu` does, as observed from the command line. Version 0.1.x. For internals see
+What `migadu` does, as observed from the command line. Version 0.3.x. For internals see
 [architecture](../architecture.md); for the panel forms see [web-panel](../web-panel.md).
 
 ## Invocation

@@ -6,10 +6,12 @@
 - Purpose and non-goals: `intent.md`. Architecture: `docs/architecture.md`. Decisions: `docs/adr/`.
 
 ## Stack
-- Language-neutral repository; see README.md.
+- Rust (edition 2021, `rust-version` 1.85). Two direct dependencies: `ureq` (HTTPS, rustls) and `serde_json`.
+- Layout: `src/` (library and `main.rs`), `tests/` (offline tests with fakes), `docs/` (see `docs/architecture.md`).
 
 ## Commands
-- Verify everything: `scripts/verify`
+- Verify everything: `scripts/verify` (runs `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test`).
+- Build and run: `cargo run --release -- --help`.
 
 ## Verification
 - Run `scripts/verify` before handing work back; it must pass. CI runs the same command and is the authoritative gate.

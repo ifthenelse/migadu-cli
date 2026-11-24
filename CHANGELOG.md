@@ -1,6 +1,36 @@
 # Changelog
 
-User-visible and operationally material changes. Generate entries from the agreed release process
-rather than editing several version sources by hand. Format: [Keep a Changelog](https://keepachangelog.com), [SemVer](https://semver.org).
+User-visible and operationally material changes. Release notes with every commit are generated on each
+[GitHub release](https://github.com/ifthenelse/migadu-cli/releases). Format: [Keep a Changelog](https://keepachangelog.com),
+[SemVer](https://semver.org).
 
 ## [Unreleased]
+
+## [0.3.2] - 2026-11-24
+### Changed
+- Documentation refreshed after the Rust rewrite; leftover Node.js files removed.
+
+## [0.3.1] - 2026-11-24
+### Added
+- Install instructions per operating system with checksum verification.
+
+## [0.3.0] - 2026-11-24
+### Changed
+- **Breaking:** rewritten in Rust. The Node.js and Bun builds are gone; releases ship native binaries of about 1.4 MB for
+  macOS (Arm and Intel), Linux (x64 and Arm) and Windows (x64), plus a source package and `SHA256SUMS`.
+  Commands, options, output and exit codes are unchanged.
+
+## [0.2.3] - 2026-11-24
+First published release (Node.js; versions before it were never tagged).
+### Added
+- Domains, mailboxes, aliases, rewrites, identities and forwardings through the Migadu REST API, the `api` pass-through,
+  and API-key lookup from 1Password, Bitwarden, pass, KeePassXC and the OS keychain.
+- `migadu tier`: plan and limits read from the admin panel with a session cookie.
+- `migadu catchall`, `migadu spam` and `migadu bcc`, driven through the admin panel's forms.
+- Releases are tagged, built and published automatically when the version changes on `main`.
+
+[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/ifthenelse/migadu-cli/compare/v0.2.3...v0.3.0
+[0.2.3]: https://github.com/ifthenelse/migadu-cli/releases/tag/v0.2.3
