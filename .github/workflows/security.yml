@@ -1,0 +1,47 @@
+name: Security
+on:
+  push: { branches: [main] }
+  pull_request:
+  schedule: [{ cron: "17 4 * * 1" }]
+permissions: { contents: read }
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: { languages: javascript-typescript }
+      - uses: github/codeql-action/analyze@v3
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+  # A CLI has no running service to attack; "pentest" here is SAST + a negative-input check
+  # that credentials and shell metacharacters never reach a shell or get echoed.
+  pentest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Semgrep (OWASP + Node.js rulesets)
+        run: |
+          pipx install semgrep
+          semgrep scan --error --config p/owasp-top-ten --config p/nodejs --config p/secrets .
+      - name: No shell execution anywhere in src
+        run: "! grep -nE 'execSync|shell: *true|child_process.*\\bexec\\b' src bin"
+      - name: Credentials never echoed on failure
+        run: |
+          out=$(MIGADU_EMAIL=a@b.c MIGADU_API_KEY=SUPERSECRET123 node bin/migadu.js api GET /nope 2>&1 || true)
+          if echo "$out" | grep -q SUPERSECRET123; then echo "secret leaked"; exit 1; fi
