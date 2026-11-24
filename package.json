@@ -7,7 +7,7 @@
   "files": ["bin", "src", "README.md", "LICENSE"],
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test",
     "lint": "node --check bin/migadu.js src/*.js"
   },
   "keywords": ["migadu", "email", "cli", "1password", "bitwarden"],
