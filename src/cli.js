@@ -185,7 +185,7 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
     out(values.output === "table" ? table(result) : JSON.stringify(result, null, 2));
     return 0;
   } catch (x) {
-    err("error: command failed");
+    err(`error: ${x.message}`);
     return 1;
   }
 }

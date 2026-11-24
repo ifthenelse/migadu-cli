@@ -30,7 +30,7 @@ export async function resolveSecret(ref, { exec = run, platform = process.platfo
       if (platform === "darwin") return firstLine(await exec("security", ["find-generic-password", "-s", val, "-w"]));
       if (platform === "linux") return firstLine(await exec("secret-tool", ["lookup", "service", val]));
       throw new Error("keychain: is supported on macOS and Linux only; on Windows use op:, bw: or keepassxc:");
-    default: throw new Error(`unknown secret reference "${ref}"`);
+    default: throw new Error("unknown secret reference scheme (expected op://, bw:, pass:, keepassxc: or keychain:)");
   }
 }
 
