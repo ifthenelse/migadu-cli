@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: read, security-events: write }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v3
         with: { languages: javascript-typescript }
       - uses: github/codeql-action/analyze@v3
   secrets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
       - name: Gitleaks (full history)
         run: |
@@ -27,14 +27,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: read, pull-requests: write }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/dependency-review-action@v4
   # A CLI has no running service to attack; "pentest" here is SAST + a negative-input check
   # that credentials and shell metacharacters never reach a shell or get echoed.
   pentest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - name: Semgrep (OWASP + Node.js rulesets)

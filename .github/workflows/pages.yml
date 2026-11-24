@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: cp .github/assets/logo.svg site/logo.svg
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
