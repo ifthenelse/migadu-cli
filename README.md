@@ -51,6 +51,10 @@ migadu domains records example.org
 migadu domains diagnostics example.org
 migadu domains activate example.org
 
+# Catchall recipients (admin panel; needs MIGADU_WEB_COOKIE)
+migadu catchall get example.org
+migadu catchall set example.org -f destinations=alice@example.org,bob@example.org
+
 # Anything else
 migadu api GET /domains/example.org/rewrites -o table
 ```
@@ -80,13 +84,14 @@ Windows Credential Manager has no built-in read CLI, so on Windows use 1Password
 | `MIGADU_API_KEY` | none | API key in plain form |
 | `MIGADU_API_KEY_REF` | none | Password-manager reference, used when `MIGADU_API_KEY` is unset |
 | `MIGADU_DOMAIN` | none | Default domain, same as `-d` |
-| `MIGADU_WEB_COOKIE` | none | `Cookie` header copied from a signed-in admin.migadu.com tab; enables the plan lookup in `migadu tier` |
+| `MIGADU_WEB_COOKIE` | none | `Cookie` header copied from a signed-in admin.migadu.com tab; enables the plan lookup in `migadu tier` and `migadu catchall` |
 | `MIGADU_WEB_COOKIE_REF` | none | Same, read from a password manager (references as above) |
 
 ## Limitations
 
 - The REST API has no plan endpoint, so `migadu tier` reads the plan from the admin panel's HTML with a cookie you supply. It is read-only and breaks if Migadu changes the page markup. The plan limits table is a snapshot from 2026-11-24.
-- Panel-only features (catchall, Bcc captures, spam filtering, domain aliases) are mapped in [docs/web-panel.md](docs/web-panel.md) but not implemented.
+- `migadu catchall` drives the admin panel's HTML form with your session cookie. It re-reads the page after saving and fails if the change did not stick. It has been tested with mocks only, not yet with a live write.
+- Bcc captures, spam filtering and domain aliases are mapped in [docs/web-panel.md](docs/web-panel.md) but not implemented.
 - The endpoint paths follow Migadu's public API and are covered by mocked tests only; they have not yet been run against a live account.
 
 ## Development

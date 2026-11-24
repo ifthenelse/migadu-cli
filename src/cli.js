@@ -21,6 +21,7 @@ export const HELP = `migadu — Migadu email hosting from your terminal
 Usage: migadu [options] <resource> <action> [args]
 
   tier                                     plan (needs MIGADU_WEB_COOKIE) and usage
+  catchall get|set [domain]                catchall recipients (admin panel; needs MIGADU_WEB_COOKIE)
   domains  list|get|create|update|records|diagnostics|usage|activate [name]
   mailboxes|aliases|rewrites  list|get|create|update|delete [id]
   identities|forwardings      list|get|create|update|delete <mailbox> [id]
@@ -106,7 +107,7 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
 
   try {
     const cookie = env.MIGADU_WEB_COOKIE || (env.MIGADU_WEB_COOKIE_REF && (await resolveSecret(env.MIGADU_WEB_COOKIE_REF, { exec })));
-    const web = res === "tier" && cookie ? createWeb({ cookie, fetchImpl }) : null;
+    const web = (res === "tier" || res === "catchall") && cookie ? createWeb({ cookie, fetchImpl }) : null;
     // `tier` may run on the web cookie alone; everything else needs API credentials.
     const creds = await loadCredentials(env, { exec }).catch((x) => { if (web) return null; throw x; });
     const client = creds ? createClient({ ...creds, fetchImpl }) : null;
@@ -116,7 +117,16 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
     let result;
 
     if (res === "tier") result = await tier(client, domain, web);
-    else if (res === "api") {
+    else if (res === "catchall") {
+      if (!web) throw new Error("catchall uses the admin panel: set MIGADU_WEB_COOKIE or MIGADU_WEB_COOKIE_REF");
+      const name = rest[0] ?? needDomain();
+      if (action === "get") result = await web.getCatchall(name);
+      else if (action === "set") {
+        const list = (body?.destinations ?? "").split(/[\s,]+/).filter(Boolean);
+        if (!list.length && !values.yes) throw new Error("refusing to clear the catchall without --yes");
+        result = await web.setCatchall(name, list);
+      } else throw new Error("usage: migadu catchall get|set [domain] -f destinations=a@x.org,b@x.org");
+    } else if (res === "api") {
       if (!action || !rest[0]) throw new Error("usage: migadu api <METHOD> <path>");
       result = await client.request(action.toUpperCase(), rest[0].startsWith("/") ? rest[0] : "/" + rest[0], body);
     } else if (res === "domains") {

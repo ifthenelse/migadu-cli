@@ -10,10 +10,10 @@ that POST with a `_csrf_token` hidden field. Domains are addressed by numeric id
 | Domain list | `/domains` | read-only |
 | New mailbox | `/domains/<id>/mailboxes` | `mailbox[local_part]`, `mailbox[name]`, `mailbox[password_method]`, `mailbox[password_recovery_email]`, `mailbox[tags]` |
 | New alias | `/domains/<id>/aliases` | `alias[local_part]`, `alias[destinations]`, `alias[tags]` |
-| Catchall | `/domains/<id>` (`_method`) | `domain[catchall_destinations]` |
+| Catchall | `PUT /domains/<id>` (POST with `_method=put`, `template=catchall`, `origin_path`) | `domain[catchall_destinations]`, newline or comma separated; read from `/domains/<id>/catchall` |
 | Listing settings | `/domains/<id>` | `description`, `tags` |
 | Read-only pages | `activity`, `aliasing`, `rewrites`, `bccs`, `spam`, `dns`, `notes`, `transfer`, `deactivation`, `delete` | not mapped |
 
-Implemented in the CLI: reading the plan (`migadu tier` with `MIGADU_WEB_COOKIE`). Web writes are not
+Implemented in the CLI: reading the plan (`migadu tier`) and reading/writing the catchall (`migadu catchall`), both with `MIGADU_WEB_COOKIE`. Other web writes are not
 implemented; the REST API covers mailboxes, aliases and rewrites. Catchall, Bcc captures, spam filtering and
 domain aliases are not confirmed to exist in the REST API.
