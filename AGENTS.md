@@ -17,7 +17,13 @@
 
 ## Constraints
 - Commit messages follow Conventional Commits (see `.gitmessage.txt`). Keep changes small and focused.
-- Do not reformat unrelated code. Do not edit generated files, lockfiles by hand, or the single version source.
+- Do not reformat unrelated code. Do not edit generated files or lockfiles by hand.
+- Versioning follows [Semantic Versioning 2.0.0](https://semver.org/). The single version source is `version` in
+  `package.json`. **Every pull request bumps it**, and only for the change it contains:
+  MAJOR for a backwards-incompatible change to commands, options, output or configuration; MINOR for backwards-compatible
+  functionality; PATCH for fixes, documentation, CI and other changes that leave behaviour untouched. While the major
+  version is 0, anything may change, but still bump MINOR for breaking changes and PATCH otherwise.
+  Release tags are `vMAJOR.MINOR.PATCH` and must equal that field (the release workflow enforces it).
 - Never commit secrets or `.env` files. `.env.example` holds names and safe placeholders only.
 
 ## Approval boundaries

@@ -7,8 +7,8 @@
 | older | no |
 
 ## Reporting a vulnerability
-TODO: reporting route (private advisory or security mailbox). Do not open public issues for vulnerabilities.
-We aim to acknowledge reports within TODO business days.
+Report privately through GitHub: Security tab, "Report a vulnerability" (private vulnerability reporting is enabled). Do not open public issues for vulnerabilities.
+This is a one-maintainer project, so we aim to acknowledge reports within 7 days.
 
 ## Secure development expectations
 - No credentials, tokens or confidential incident data in the repository, issues or this file.
