@@ -14,7 +14,9 @@ publishing the project site.
 There is no custom domain; the site lives at the GitHub Pages project URL.
 
 ## Release
-The version has one source: `version` in `package.json`.
+The version has one source: `version` in `package.json`, and it follows [Semantic Versioning 2.0.0](https://semver.org/). Every pull request bumps it:
+MAJOR for a backwards-incompatible change to commands, options, output or configuration, MINOR for backwards-compatible
+functionality, PATCH for fixes, documentation and CI. While the major version is 0, bump MINOR for breaking changes.
 
 1. Merge the changes for the release into `main`. Bump `version` in `package.json` in the same or an earlier pull request.
 2. Tag the merge commit with the same number and push the tag:
