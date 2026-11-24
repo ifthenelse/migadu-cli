@@ -1,6 +1,6 @@
 {
   "name": "migadu-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Cross-platform CLI for the Migadu email hosting API, with password-manager credential lookup.",
   "type": "module",
   "bin": { "migadu": "bin/migadu.js" },
