@@ -4,7 +4,7 @@
 
 # migadu-cli
 
-Manage your [Migadu](https://www.migadu.com) email hosting from the terminal on Windows, macOS and Linux, with API keys pulled straight from your password manager.
+The maintained command line for [Migadu](https://www.migadu.com) email hosting: new project, new mailboxes, done in the terminal on Windows, macOS and Linux, with your API key pulled from your password manager and never stored in a file.
 
 [![CI](https://github.com/ifthenelse/migadu-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ifthenelse/migadu-cli/actions/workflows/ci.yml)
 [![Security](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml/badge.svg)](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml)
@@ -20,11 +20,43 @@ Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps
 - **Tier report** — `migadu tier` shows your plan, renewal date and plan limits (read from the admin panel with a session cookie) plus per-domain API usage.
 - **One native binary** — no runtime to install; built and tested on Linux, macOS and Windows in CI, with two direct dependencies (an HTTPS client and a JSON library).
 
+## Install
+
+Pick the archive for your system from the [latest release](https://github.com/ifthenelse/migadu-cli/releases/latest).
+Each one holds the `migadu` binary, `LICENSE` and `README.md`.
+
+| System | Archive |
+| --- | --- |
+| macOS, Apple silicon | `migadu-<version>-darwin-arm64.tar.gz` |
+| macOS, Intel | `migadu-<version>-darwin-x64.tar.gz` |
+| Linux, x86-64 | `migadu-<version>-linux-x64.tar.gz` |
+| Linux, Arm64 | `migadu-<version>-linux-arm64.tar.gz` |
+| Windows, x86-64 | `migadu-<version>-windows-x64.zip` |
+
+macOS and Linux (replace the version and the system name from the table):
+
+```sh
+VERSION=v0.3.0
+SYSTEM=darwin-arm64
+curl -fLO "https://github.com/ifthenelse/migadu-cli/releases/download/$VERSION/migadu-$VERSION-$SYSTEM.tar.gz"
+curl -fLO "https://github.com/ifthenelse/migadu-cli/releases/download/$VERSION/SHA256SUMS"
+shasum -a 256 -c SHA256SUMS --ignore-missing   # on Linux: sha256sum -c SHA256SUMS --ignore-missing
+tar -xzf "migadu-$VERSION-$SYSTEM.tar.gz"
+sudo install "migadu-$VERSION-$SYSTEM/migadu" /usr/local/bin/migadu
+migadu --help
+```
+
+If you downloaded the archive with a browser, macOS may block the unsigned binary; clear the flag with
+`xattr -d com.apple.quarantine /usr/local/bin/migadu`.
+
+Windows (PowerShell): download the `.zip`, check it with `Get-FileHash <file> -Algorithm SHA256` against `SHA256SUMS`,
+extract it, and put the folder with `migadu.exe` on your `PATH`.
+
+From source, with [Rust](https://rustup.rs) 1.85 or newer: `cargo install --git https://github.com/ifthenelse/migadu-cli`.
+
 ## Quickstart
 
-You need a [Migadu API key](https://admin.migadu.com/account/api/keys). Download the archive for your system from the
-[latest release](https://github.com/ifthenelse/migadu-cli/releases/latest) (macOS, Linux and Windows, Intel/AMD and Arm),
-unpack it, and put `migadu` on your `PATH`. Check it against `SHA256SUMS` from the same release.
+You need a [Migadu API key](https://admin.migadu.com/account/api/keys) (the API is not available on the Micro plan).
 
 ```sh
 export MIGADU_EMAIL=<your-admin-email>
@@ -32,8 +64,9 @@ export MIGADU_API_KEY=<your-api-key>
 migadu domains list
 ```
 
-You should see the JSON list of domains on your account. To build from source instead, install [Rust](https://rustup.rs) 1.85
-or newer and run `cargo install --git https://github.com/ifthenelse/migadu-cli`.
+You should see the JSON list of domains on your account. To keep the key out of your shell history and dotfiles, point
+`MIGADU_API_KEY_REF` at your password manager instead, for example `op://Private/Migadu/credential`
+(see [Password managers](#password-managers)).
 
 ## Usage
 
