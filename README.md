@@ -19,6 +19,10 @@ The maintained command line for [Migadu](https://www.migadu.com) email hosting: 
 
 Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps the Migadu REST API so domains, mailboxes, aliases, identities, forwardings and rewrites are scriptable, and the API key never has to sit in a dotfile. It ships as one small native binary (about 1.4 MB, written in Rust) and is not an official Migadu product.
 
+<p align="center">
+  <img src=".github/assets/demo.gif" alt="Terminal recording: migadu reports missing credentials, rejects an unsupported password-manager reference, refuses to delete without --yes, and shows Migadu's 401 for a fake key" width="900">
+</p>
+
 ## Features
 
 - **Whole API surface** — domains (records, diagnostics, usage, activate), mailboxes, aliases, rewrites, identities and forwardings, plus `migadu api <METHOD> <path>` for any other endpoint.

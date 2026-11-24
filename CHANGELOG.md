@@ -6,6 +6,10 @@ User-visible and operationally material changes. Release notes with every commit
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-24
+### Added
+- Demo GIF in the README, with its recording script in `docs/demo.tape`.
+
 ## [0.3.3] - 2026-11-24
 ### Changed
 - New logo and header in light and dark variants for the README and the project site.
@@ -33,7 +37,8 @@ First published release (Node.js; versions before it were never tagged).
 - `migadu catchall`, `migadu spam` and `migadu bcc`, driven through the admin panel's forms.
 - Releases are tagged, built and published automatically when the version changes on `main`.
 
-[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.0...v0.3.1

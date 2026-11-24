@@ -1,29 +1,78 @@
-# Demo recording script for the README GIF, for VHS (https://github.com/charmbracelet/vhs).
-# Record against a throwaway domain and a test mailbox, then delete them:
-#   vhs docs/demo.tape      # writes .github/assets/demo.gif
-# Needs MIGADU_EMAIL set and MIGADU_API_KEY_REF pointing at your password manager.
-Output .github/assets/demo.gif
-Set FontSize 18
-Set Width 1100
-Set Height 600
-Set Theme "Dracula"
-Set TypingSpeed 40ms
+# Record: vhs docs/demo.tape
+# Edit the steps below and re-run vhs after the tool changes.
 
-Type "# New project, new mailboxes: done in the terminal"
+Output .github/assets/demo.gif
+Require migadu
+
+Set Shell "bash"
+Set FontSize 18
+Set Width 1300
+Set Height 420
+Set Padding 20
+Set Framerate 24
+Set TypingSpeed 25ms
+Set Theme "Catppuccin Mocha"
+Set WaitPattern /\$$/
+
+Hide
+Type "export PS1='$ '"
 Enter
-Sleep 800ms
-Type "export MIGADU_API_KEY_REF='op://Private/Migadu/credential'  # the key never touches a file"
+Type "clear"
 Enter
+Sleep 200ms
+Show
+
+Hide
+Type 'export HOME="$(mktemp -d)"'
+Enter
+Wait
+Type "export MIGADU_EMAIL=me@example.org MIGADU_DOMAIN=example.org"
+Enter
+Wait
+Type "export PS1='$ '"
+Enter
+Wait
+Type "clear"
+Enter
+Wait
+Type "clear"
+Enter
+Sleep 200ms
+Show
+
+Type@25ms "migadu domains list"
+Sleep 400ms
+Enter
+Wait
 Sleep 1s
-Type "migadu mailboxes create -d example.org -f local_part=hello -f name=Hello -f password_method=invitation -f password_recovery_email=me@example.net"
+
+Sleep 1200ms
+Type@25ms "MIGADU_API_KEY_REF=oops migadu domains list"
+Sleep 400ms
 Enter
-Sleep 3s
-Type "migadu aliases create -d example.org -f local_part=support -f destinations=hello@example.org"
+Wait
+Sleep 1s
+
+Sleep 1200ms
+Type@25ms "export MIGADU_API_KEY=not-a-real-key"
+Sleep 400ms
 Enter
-Sleep 3s
-Type "migadu mailboxes list -d example.org -o table"
+Wait
+Sleep 1s
+
+Type@25ms "migadu mailboxes delete hello"
+Sleep 400ms
 Enter
-Sleep 3s
-Type "migadu mailboxes delete -d example.org hello --yes"
+Wait
+Sleep 1s
+
+Sleep 1200ms
+Type@25ms "migadu domains list"
+Sleep 400ms
 Enter
+Wait
+Sleep 1s
+
+Sleep 2s
+
 Sleep 3s
