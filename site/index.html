@@ -1,8 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>migadu-cli</title>
-<meta name="description" content="Run your Migadu email hosting from the terminal on Windows, macOS and Linux.">
-<link rel="icon" href="logo.svg">
+<meta name="description" content="The maintained command line for Migadu email hosting, for Windows, macOS and Linux.">
+<link rel="icon" href="logo.svg" media="(prefers-color-scheme: light)">
+<link rel="icon" href="logo-dark.svg" media="(prefers-color-scheme: dark)">
 <style>
 :root{--bg:#fff;--fg:#0f172a;--mut:#475569;--acc:#0f766e;--code:#f1f5f9}
 @media(prefers-color-scheme:dark){:root{--bg:#0f172a;--fg:#f8fafc;--mut:#cbd5e1;--acc:#2dd4bf;--code:#1e293b}}
@@ -11,9 +12,9 @@ main{max-width:720px;margin:0 auto;padding:48px 16px}
 img{width:96px;height:96px}pre{background:var(--code);padding:16px;border-radius:8px;overflow-x:auto;font-size:15px}
 a{color:var(--acc)}p.m{color:var(--mut)}
 </style></head><body><main>
-<img src="logo.svg" alt="migadu-cli logo">
+<picture><source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg"><img src="logo.svg" alt="migadu-cli logo"></picture>
 <h1>migadu-cli</h1>
-<p class="m">Manage Migadu domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
+<p class="m">The maintained command line for Migadu: domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
 <pre>cargo install --git https://github.com/ifthenelse/migadu-cli
 migadu mailboxes list -d example.org</pre>
 <p class="m">Or download a ready-made binary for macOS, Linux or Windows from the <a href="https://github.com/ifthenelse/migadu-cli/releases/latest">latest release</a>.</p>

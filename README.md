@@ -1,5 +1,9 @@
 <p align="center">
-  <img src=".github/assets/banner.svg" alt="migadu-cli: run your Migadu email hosting from the terminal" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/banner-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.svg">
+    <img alt="migadu-cli: the maintained command line for Migadu email hosting" src=".github/assets/banner-light.svg" width="100%">
+  </picture>
 </p>
 
 # migadu-cli
@@ -8,7 +12,10 @@ The maintained command line for [Migadu](https://www.migadu.com) email hosting: 
 
 [![CI](https://github.com/ifthenelse/migadu-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ifthenelse/migadu-cli/actions/workflows/ci.yml)
 [![Security](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml/badge.svg)](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml)
+[![Release](https://img.shields.io/github/v/release/ifthenelse/migadu-cli)](https://github.com/ifthenelse/migadu-cli/releases/latest)
 [![License](https://img.shields.io/github/license/ifthenelse/migadu-cli)](LICENSE)
+
+[Install](#install) · [Quickstart](#quickstart) · [Usage](#usage) · [Password managers](#password-managers) · [Configuration](#configuration) · [Contributing](#contributing)
 
 Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps the Migadu REST API so domains, mailboxes, aliases, identities, forwardings and rewrites are scriptable, and the API key never has to sit in a dotfile. It ships as one small native binary (about 1.4 MB, written in Rust) and is not an official Migadu product.
 
