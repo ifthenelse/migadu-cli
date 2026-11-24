@@ -144,3 +144,17 @@ test("catchall set fails loudly when the panel did not apply it, and clearing ne
   assert.match((await runWeb(["catchall", "set", "example.org", "-f", "destinations=a@x.org"], panel({ apply: false }))).err, /not applied/);
   assert.match((await runWeb(["catchall", "set", "example.org"], panel())).err, /--yes/);
 });
+
+test("catchall set accepts the panel rewriting recipients onto the domain", async () => {
+  const p = panel();
+  const orig = p.fetchImpl;
+  p.fetchImpl = async (url, init = {}) => {
+    if (init.method === "POST") init.body.set("domain[catchall_destinations]", init.body.get("domain[catchall_destinations]").replace(/@.*/, "@example.org"));
+    return orig(url, init);
+  };
+  const r = await runWeb(["catchall", "set", "example.org", "-f", "destinations=admin@other.com"], p);
+  assert.equal(r.code, 0, r.err);
+  const out = JSON.parse(r.out);
+  assert.deepEqual(out.destinations, ["admin@example.org"]);
+  assert.match(out.note, /this domain/);
+});

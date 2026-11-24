@@ -69,8 +69,10 @@ export function createWeb({ cookie, fetchImpl = globalThis.fetch }) {
     });
     if (res.status >= 400 || /login/.test(res.headers?.get?.("location") ?? "")) throw new Error(`catchall update failed (HTTP ${res.status})`);
     const after = (await readCatchall(name)).destinations;
-    if (after.join(",") !== destinations.join(",")) throw new Error(`catchall update not applied; current value is [${after.join(", ")}]`);
-    return { domain: name, previous, destinations: after };
+    // The panel keeps only the local part and re-attaches it to this domain, so compare by local part.
+    const local = (l) => l.map((a) => a.split("@")[0].toLowerCase()).join(",");
+    if (local(after) !== local(destinations)) throw new Error(`catchall update not applied; current value is [${after.join(", ")}]`);
+    return { domain: name, previous, destinations: after, ...(after.join(",") !== destinations.join(",") && { note: "the panel stores catchall recipients as addresses on this domain" }) };
   }
 
   return { page, plan, domains, getCatchall, setCatchall };
