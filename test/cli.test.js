@@ -83,6 +83,20 @@ test("password manager references map to the right commands", async () => {
   await assert.rejects(resolveSecret("nope", { exec }), /unknown/);
 });
 
+test("an unsupported secret reference is never echoed back", async () => {
+  const marker = "SENSITIVE-MARKER-123";
+  await assert.rejects(resolveSecret(marker, { exec: async () => "" }), (e) => /unknown secret reference/.test(e.message) && !e.message.includes(marker));
+  for (const [name, e, argv] of [
+    ["MIGADU_API_KEY_REF", { MIGADU_EMAIL: "a@x.org", MIGADU_API_KEY_REF: marker }, ["domains", "list"]],
+    ["MIGADU_WEB_COOKIE_REF", { MIGADU_WEB_COOKIE_REF: marker }, ["tier"]],
+  ]) {
+    const h = harness(() => [200, {}]);
+    assert.equal(await h.run(argv, e), 1, name);
+    assert.match(h.errs[0], /^error: unknown secret reference/, name);
+    assert.ok(!h.errs.join("\n").includes(marker), `${name} value leaked`);
+  }
+});
+
 test("tier reads the plan from the admin panel with a session cookie, no API key needed", async () => {
   const seen = [];
   const html = '<a href="/billing/subscription">Mini / monthly</a> Active Plan renews November 27, 2026';
