@@ -90,7 +90,7 @@ Windows Credential Manager has no built-in read CLI, so on Windows use 1Password
 ## Limitations
 
 - The REST API has no plan endpoint, so `migadu tier` reads the plan from the admin panel's HTML with a cookie you supply. It is read-only and breaks if Migadu changes the page markup. The plan limits table is a snapshot from 2026-11-24.
-- `migadu catchall` drives the admin panel's HTML form with your session cookie. It re-reads the page after saving and fails if the change did not stick. It has been tested with mocks only, not yet with a live write.
+- `migadu catchall` drives the admin panel's HTML form with your session cookie. It re-reads the page after saving and fails if the change did not stick. The panel stores recipients as addresses on the same domain (`admin@other.com` becomes `admin@example.org`), and the output says when it did that. Verified with a live write and restore on a test domain.
 - Bcc captures, spam filtering and domain aliases are mapped in [docs/web-panel.md](docs/web-panel.md) but not implemented.
 - The endpoint paths follow Migadu's public API and are covered by mocked tests only; they have not yet been run against a live account.
 
