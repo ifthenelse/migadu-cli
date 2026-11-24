@@ -14,7 +14,9 @@ a{color:var(--acc)}p.m{color:var(--mut)}
 <img src="logo.svg" alt="migadu-cli logo">
 <h1>migadu-cli</h1>
 <p class="m">Manage Migadu domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
-<pre>npx github:ifthenelse/migadu-cli mailboxes list -d example.org</pre>
+<pre>cargo install --git https://github.com/ifthenelse/migadu-cli
+migadu mailboxes list -d example.org</pre>
+<p class="m">Or download a ready-made binary for macOS, Linux or Windows from the <a href="https://github.com/ifthenelse/migadu-cli/releases/latest">latest release</a>.</p>
 <pre>export MIGADU_EMAIL=you@example.org
 export MIGADU_API_KEY_REF="op://Private/Migadu/credential"
 migadu tier

@@ -6,36 +6,36 @@ publishing the project site.
 ## Environments and promotion path
 | Environment | Purpose | Promotion from | Approval |
 | --- | --- | --- | --- |
-| Pull request | CI on the merge result: `verify` on 3 OSes × Node 22/24, CodeQL, Gitleaks, Semgrep, dependency review | feature branch | all 9 required checks green, conversations resolved |
+| Pull request | CI on the merge result: `verify` on 3 OSes (stable Rust) plus an MSRV build, CodeQL, Gitleaks, Semgrep, dependency review | feature branch | all 9 required checks green, conversations resolved |
 | `main` | Always releasable | pull request | squash or rebase merge (linear history), no direct pushes, applies to admins |
 | GitHub Pages | Project site at `https://ifthenelse.github.io/migadu-cli/` | `main`, when `site/**` or `.github/assets/**` change | automatic (`pages.yml`) |
-| GitHub Release | Downloadable archives, npm tarball, checksums | a change to `package.json` on `main` | merging the pull request that bumps the version |
+| GitHub Release | Downloadable archives, source package, checksums | a change to the version in `Cargo.toml` on `main` | merging the pull request that bumps the version |
 
 There is no custom domain; the site lives at the GitHub Pages project URL.
 
 ## Release
-The version has one source: `version` in `package.json`, and it follows [Semantic Versioning 2.0.0](https://semver.org/). Every pull request bumps it:
+The version has one source: `version` in `Cargo.toml` (`Cargo.lock` follows it), and it follows [Semantic Versioning 2.0.0](https://semver.org/). Every pull request bumps it:
 MAJOR for a backwards-incompatible change to commands, options, output or configuration, MINOR for backwards-compatible
 functionality, PATCH for fixes, documentation and CI. While the major version is 0, bump MINOR for breaking changes.
 
-1. Bump `version` in `package.json` in the pull request that makes the change, and merge it into `main`.
-2. When a push to `main` changes `package.json`, `.github/workflows/release.yml` runs by itself (it can also be started
+1. Bump `version` in `Cargo.toml` in the pull request that makes the change (run `cargo build` so `Cargo.lock` follows), and merge it into `main`.
+2. When a push to `main` changes `Cargo.toml`, `.github/workflows/release.yml` runs by itself (it can also be started
    by hand from the Actions tab, or by pushing a `v<version>` tag). Its jobs:
    - **plan:** reads the version, derives the tag `v<version>`, and stops quietly if a release with that tag already exists.
-     A pushed tag that differs from `package.json` fails.
-   - **verify:** runs `scripts/verify`.
-   - **build:** compiles one stand-alone binary per target with Bun (pinned to 1.4.5): `darwin-arm64`, `darwin-x64`,
-     `linux-x64`, `linux-arm64`, `windows-x64`. Each goes into an archive (`.tar.gz`, or `.zip` for Windows) with `LICENSE`
-     and `README.md`. It also runs `npm pack` for the npm tarball, smoke-tests the Linux binary (prints help, never echoes a
-     test secret) and writes `SHA256SUMS`.
-   - **publish:** creates the tag on the merged commit and the GitHub release with all files and generated notes. This is
-     the only job with write permission.
+     A pushed tag that differs from `Cargo.toml` fails.
+   - **verify:** runs `scripts/verify` (format, clippy, tests).
+   - **build:** compiles natively on each operating system, in release mode with `--locked`: `darwin-arm64`, `darwin-x64`
+     (cross-built on the Arm runner), `linux-x64`, `linux-arm64` and `windows-x64`. It smoke-tests every binary the runner can
+     execute (prints help, never echoes a test secret) and archives each with `LICENSE` and `README.md` (`.tar.gz`, or `.zip`
+     for Windows).
+   - **publish:** adds the source package from `cargo package` and `SHA256SUMS`, then creates the tag on the merged commit
+     and the GitHub release with generated notes. This is the only job with write permission.
 
-Because the trigger is a changed `package.json`, a merged pull request that bumps the version is published automatically.
+Because the trigger is a changed `Cargo.toml`, a merged pull request that bumps the version is published automatically.
 Pull requests that do not change the version publish nothing. Tags created by the workflow itself do not start a second run.
 
-Binaries embed the Bun runtime, so they are 87–115 MB. The Node-based install (`node bin/migadu.js`) stays supported and is
-the reference behaviour; see [ADR 0005](adr/0005-standalone-binaries-with-bun.md).
+Binaries are about 1.4 MB, statically linked against rustls, and need no runtime. Linux binaries link the system C library
+and are built on Ubuntu 22.04 for wide compatibility. See [ADR 0006](adr/0006-rewrite-in-rust.md).
 
 ## Smoke tests
 After a release, on each OS you can reach:

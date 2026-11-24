@@ -1,6 +1,6 @@
 # 0005. Stand-alone binaries built with Bun
 
-- Status: accepted
+- Status: superseded by [0006](0006-rewrite-in-rust.md)
 - Date: 2026-11-24
 
 ## Context
