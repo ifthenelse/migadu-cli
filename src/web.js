@@ -1,6 +1,6 @@
 // Read-only access to the admin panel (server-rendered HTML) using a session cookie the user supplies.
 // shortcut: HTML regex parsing, breaks if Migadu changes the markup; upgrade to a real parser if it does.
-import { parseForm, setField, getField } from "./forms.js";
+import { parseForm, stripComments, setField, getField } from "./forms.js";
 
 export const PANEL = "https://admin.migadu.com";
 
@@ -137,7 +137,7 @@ export function createWeb({ cookie, fetchImpl = globalThis.fetch }) {
 
   async function listBcc(name) {
     const id = await domainId(name);
-    const html = (await page(`/domains/${id}/bccs`)).replace(/<!--[\s\S]*?-->/g, "");
+    const html = stripComments(await page(`/domains/${id}/bccs`));
     return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].flatMap(([, row]) => {
       const bid = /\/bccs\/(\d+)\/edit/.exec(row)?.[1];
       if (!bid) return [];

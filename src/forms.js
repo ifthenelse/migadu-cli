@@ -3,8 +3,16 @@
 const unescape = (t) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, "&");
 const attr = (tag, n) => { const m = new RegExp(`\\b${n}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(tag); return m ? unescape(m[1] ?? m[2]) : undefined; };
 
+// Drop HTML comments (commented-out controls are not part of the form), repeating until stable so nested
+// fragments like "<!<!---->--" cannot reassemble, and discarding any unterminated "<!--" tail.
+export function stripComments(html) {
+  let prev;
+  do { prev = html; html = html.replace(/<!--[\s\S]*?-->/g, ""); } while (html !== prev);
+  return html.replace(/<!--[\s\S]*$/, "");
+}
+
 export function parseForm(html, pick) {
-  html = html.replace(/<!--[\s\S]*?-->/g, ""); // commented-out controls are not part of the form
+  html = stripComments(html);
   const found = [...html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)].map((m) => ({ tag: m[1], body: m[2] })).find((f) => pick(f.body, f.tag));
   if (!found) return null;
   const fields = [], checkboxes = new Set();
