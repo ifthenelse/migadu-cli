@@ -17,7 +17,7 @@ Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps
 - **Whole API surface** — domains (records, diagnostics, usage, activate), mailboxes, aliases, rewrites, identities and forwardings, plus `migadu api <METHOD> <path>` for any other endpoint.
 - **Password-manager credentials** — 1Password, Bitwarden, `pass`, KeePassXC, macOS Keychain and Linux Secret Service, read by calling each tool's CLI without a shell.
 - **Safe by default** — deletes need `--yes`, and the CLI confirms a delete that Migadu reports as HTTP 500 but actually performed.
-- **Tier report** — `migadu tier` prints the plan/usage data the API returns for each domain.
+- **Tier report** — `migadu tier` shows your plan, renewal date and plan limits (read from the admin panel with a session cookie) plus per-domain API usage.
 - **Cross-platform, zero dependencies** — plain Node.js, tested on Linux, macOS and Windows in CI.
 
 ## Quickstart
@@ -80,10 +80,13 @@ Windows Credential Manager has no built-in read CLI, so on Windows use 1Password
 | `MIGADU_API_KEY` | none | API key in plain form |
 | `MIGADU_API_KEY_REF` | none | Password-manager reference, used when `MIGADU_API_KEY` is unset |
 | `MIGADU_DOMAIN` | none | Default domain, same as `-d` |
+| `MIGADU_WEB_COOKIE` | none | `Cookie` header copied from a signed-in admin.migadu.com tab; enables the plan lookup in `migadu tier` |
+| `MIGADU_WEB_COOKIE_REF` | none | Same, read from a password manager (references as above) |
 
 ## Limitations
 
-- The Migadu API documents no plan or tier endpoint. `migadu tier` shows any plan/tier field the API returns and your usage, and otherwise tells you to check the billing page.
+- The REST API has no plan endpoint, so `migadu tier` reads the plan from the admin panel's HTML with a cookie you supply. It is read-only and breaks if Migadu changes the page markup. The plan limits table is a snapshot from 2026-11-24.
+- Panel-only features (catchall, Bcc captures, spam filtering, domain aliases) are mapped in [docs/web-panel.md](docs/web-panel.md) but not implemented.
 - The endpoint paths follow Migadu's public API and are covered by mocked tests only; they have not yet been run against a live account.
 
 ## Development

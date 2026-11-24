@@ -1,7 +1,8 @@
 import { parseArgs } from "node:util";
 import { readFileSync } from "node:fs";
 import { createClient } from "./api.js";
-import { loadCredentials } from "./secrets.js";
+import { loadCredentials, resolveSecret } from "./secrets.js";
+import { createWeb } from "./web.js";
 
 const e = encodeURIComponent;
 
@@ -19,7 +20,7 @@ export const HELP = `migadu — Migadu email hosting from your terminal
 
 Usage: migadu [options] <resource> <action> [args]
 
-  tier                                     show plan/usage info the API exposes
+  tier                                     plan (needs MIGADU_WEB_COOKIE) and usage
   domains  list|get|create|update|records|diagnostics|usage|activate [name]
   mailboxes|aliases|rewrites  list|get|create|update|delete [id]
   identities|forwardings      list|get|create|update|delete <mailbox> [id]
@@ -33,6 +34,7 @@ Options:
   -o, --output json|table output format (default json)
   -h, --help
 
+Plan lookup reads the admin panel with a session cookie: MIGADU_WEB_COOKIE or MIGADU_WEB_COOKIE_REF.
 Credentials: MIGADU_EMAIL plus MIGADU_API_KEY or MIGADU_API_KEY_REF
   (op://vault/item/field | bw:<item> | pass:<name> | keepassxc:<db>#<entry> | keychain:<service>)
 `;
@@ -71,17 +73,19 @@ function findPlanFields(o, path = "", out = {}) {
   return out;
 }
 
-async function tier(client, domain) {
+async function tier(client, domain, web) {
+  const report = { plan_fields: {}, domains: [], note: "" };
+  if (web) Object.assign(report, await web.plan());
+  if (!client) return report;
   const list = await client.request("GET", "/domains");
   const domains = list.domains ?? [];
-  const report = { plan_fields: {}, domains: [], note: "" };
   for (const d of domains.filter((x) => !domain || x.name === domain)) {
     const usage = await client.request("GET", `/domains/${e(d.name)}/usage`).catch((err) => ({ error: err.message }));
     Object.assign(report.plan_fields, findPlanFields(d, `${d.name}.`), findPlanFields(usage, `${d.name}.usage.`));
     report.domains.push({ name: d.name, active: d.active, usage });
   }
-  if (!Object.keys(report.plan_fields).length)
-    report.note = "The Migadu API returned no plan/tier field; check https://admin.migadu.com/billing for your plan.";
+  if (!web && !Object.keys(report.plan_fields).length)
+    report.note = "The Migadu API returns no plan/tier field. Set MIGADU_WEB_COOKIE (or MIGADU_WEB_COOKIE_REF) to read the plan from the admin panel.";
   return report;
 }
 
@@ -101,14 +105,17 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
   if (values.help || !res) { out(HELP); return res || values.help ? 0 : 2; }
 
   try {
-    const creds = await loadCredentials(env, { exec });
-    const client = createClient({ ...creds, fetchImpl });
+    const cookie = env.MIGADU_WEB_COOKIE || (env.MIGADU_WEB_COOKIE_REF && (await resolveSecret(env.MIGADU_WEB_COOKIE_REF, { exec })));
+    const web = res === "tier" && cookie ? createWeb({ cookie, fetchImpl }) : null;
+    // `tier` may run on the web cookie alone; everything else needs API credentials.
+    const creds = await loadCredentials(env, { exec }).catch((x) => { if (web) return null; throw x; });
+    const client = creds ? createClient({ ...creds, fetchImpl }) : null;
     const domain = values.domain ?? env.MIGADU_DOMAIN;
     const needDomain = () => { if (!domain) throw new Error("domain required: use --domain or MIGADU_DOMAIN"); return domain; };
     const body = buildBody(values, stdin);
     let result;
 
-    if (res === "tier") result = await tier(client, domain);
+    if (res === "tier") result = await tier(client, domain, web);
     else if (res === "api") {
       if (!action || !rest[0]) throw new Error("usage: migadu api <METHOD> <path>");
       result = await client.request(action.toUpperCase(), rest[0].startsWith("/") ? rest[0] : "/" + rest[0], body);
