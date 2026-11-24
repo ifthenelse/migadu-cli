@@ -82,3 +82,23 @@ test("password manager references map to the right commands", async () => {
   await assert.rejects(resolveSecret("keychain:m", { exec, platform: "win32" }), /Windows/);
   await assert.rejects(resolveSecret("nope", { exec }), /unknown/);
 });
+
+test("tier reads the plan from the admin panel with a session cookie, no API key needed", async () => {
+  const seen = [];
+  const html = '<a href="/billing/subscription">Mini / monthly</a> Active Plan renews November 27, 2026';
+  const fetchImpl = async (url, init) => (seen.push([url, init.headers.Cookie]), { ok: true, status: 200, headers: new Map(), text: async () => html });
+  const lines = [];
+  const code = await main(["tier"], { env: { MIGADU_WEB_COOKIE: "s=abc" }, fetchImpl, out: (s) => lines.push(s), err: (s) => lines.push(s) });
+  const r = JSON.parse(lines[0]);
+  assert.equal(code, 0);
+  assert.deepEqual([r.plan, r.billing, r.renews, r.limits.api], ["mini", "monthly", "November 27, 2026", true]);
+  assert.equal(seen[0][1], "s=abc");
+});
+
+test("expired web session gives a clear error", async () => {
+  const fetchImpl = async () => ({ ok: false, status: 302, headers: new Map([["location", "/public/login"]]), text: async () => "" });
+  const errs = [];
+  const code = await main(["tier"], { env: { MIGADU_WEB_COOKIE: "s=x" }, fetchImpl, out() {}, err: (s) => errs.push(s) });
+  assert.equal(code, 1);
+  assert.match(errs[0], /session expired/);
+});
