@@ -6,6 +6,10 @@ User-visible and operationally material changes. Release notes with every commit
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-24
+### Added
+- `migadu --version` (and `-V`) prints the version.
+
 ## [0.3.4] - 2026-11-24
 ### Added
 - Demo GIF in the README, with its recording script in `docs/demo.tape`.
@@ -37,7 +41,8 @@ First published release (Node.js; versions before it were never tagged).
 - `migadu catchall`, `migadu spam` and `migadu bcc`, driven through the admin panel's forms.
 - Releases are tagged, built and published automatically when the version changes on `main`.
 
-[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.1...v0.3.2
