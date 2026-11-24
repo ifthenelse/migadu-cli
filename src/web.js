@@ -34,5 +34,44 @@ export function createWeb({ cookie, fetchImpl = globalThis.fetch }) {
     return [...html.matchAll(/href="\/domains\/(\d+)"[^>]*>\s*([a-z0-9.-]+\.[a-z]+)\s*</gi)].map((m) => ({ id: m[1], name: m[2] }));
   }
 
-  return { page, plan, domains };
+  const unescape = (t) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, "&");
+
+  async function domainId(name) {
+    const d = (await domains()).find((x) => x.name === name.toLowerCase());
+    if (!d) throw new Error(`domain "${name}" not found in the admin panel`);
+    return d.id;
+  }
+
+  async function readCatchall(name) {
+    const id = await domainId(name);
+    const html = await page(`/domains/${id}/catchall`);
+    const ta = /<textarea[^>]*name="domain\[catchall_destinations\]"[^>]*>([\s\S]*?)<\/textarea>/.exec(html);
+    const csrf = /<input[^>]*name="_csrf_token"[^>]*value="([^"]+)"/.exec(html) ?? /<input[^>]*value="([^"]+)"[^>]*name="_csrf_token"/.exec(html);
+    if (!ta || !csrf) throw new Error("catchall form not found (page layout changed or session invalid)");
+    return { id, csrf: unescape(csrf[1]), destinations: unescape(ta[1]).split(/[\s,]+/).filter(Boolean) };
+  }
+
+  async function getCatchall(name) {
+    const { destinations } = await readCatchall(name);
+    return { domain: name, destinations };
+  }
+
+  async function setCatchall(name, destinations) {
+    const { id, csrf, destinations: previous } = await readCatchall(name);
+    const body = new URLSearchParams({
+      _method: "put", _csrf_token: csrf, template: "catchall",
+      origin_path: `/domains/${id}/catchall`, "domain[catchall_destinations]": destinations.join("\n"),
+    });
+    const res = await fetchImpl(`${PANEL}/domains/${id}`, {
+      method: "POST", redirect: "manual", body,
+      headers: { Cookie: cookie, "Content-Type": "application/x-www-form-urlencoded", Referer: `${PANEL}/domains/${id}/catchall` },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (res.status >= 400 || /login/.test(res.headers?.get?.("location") ?? "")) throw new Error(`catchall update failed (HTTP ${res.status})`);
+    const after = (await readCatchall(name)).destinations;
+    if (after.join(",") !== destinations.join(",")) throw new Error(`catchall update not applied; current value is [${after.join(", ")}]`);
+    return { domain: name, previous, destinations: after };
+  }
+
+  return { page, plan, domains, getCatchall, setCatchall };
 }

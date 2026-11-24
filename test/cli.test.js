@@ -102,3 +102,45 @@ test("expired web session gives a clear error", async () => {
   assert.equal(code, 1);
   assert.match(errs[0], /session expired/);
 });
+
+function panel({ initial = "", apply = true } = {}) {
+  let value = initial;
+  const posts = [];
+  const form = () => `<form><input type="hidden" name="_csrf_token" value="tok&amp;1"><textarea name="domain[catchall_destinations]">${value}</textarea></form>`;
+  const fetchImpl = async (url, init = {}) => {
+    const h = new Map();
+    if (init.method === "POST") {
+      posts.push({ url, body: Object.fromEntries(init.body), cookie: init.headers.Cookie });
+      if (apply) value = init.body.get("domain[catchall_destinations]");
+      h.set("location", "/domains/9/catchall");
+      return { ok: false, status: 302, headers: h, text: async () => "" };
+    }
+    const html = url.endsWith("/domains") ? '<a href="/domains/9">example.org</a>' : form();
+    return { ok: true, status: 200, headers: h, text: async () => html };
+  };
+  return { fetchImpl, posts };
+}
+const runWeb = async (argv, p) => {
+  const lines = [], errs = [];
+  const code = await main(argv, { env: { MIGADU_WEB_COOKIE: "s=1" }, fetchImpl: p.fetchImpl, out: (s) => lines.push(s), err: (s) => errs.push(s) });
+  return { code, out: lines.join("\n"), err: errs.join("\n") };
+};
+
+test("catchall get lists destinations", async () => {
+  const r = await runWeb(["catchall", "get", "example.org"], panel({ initial: "a@x.org\nb@x.org" }));
+  assert.deepEqual(JSON.parse(r.out).destinations, ["a@x.org", "b@x.org"]);
+});
+
+test("catchall set posts the panel's PUT form with csrf and returns the previous value", async () => {
+  const p = panel({ initial: "old@x.org" });
+  const r = await runWeb(["catchall", "set", "example.org", "-f", "destinations=a@x.org,b@x.org"], p);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(p.posts[0].body, { _method: "put", _csrf_token: "tok&1", template: "catchall", origin_path: "/domains/9/catchall", "domain[catchall_destinations]": "a@x.org\nb@x.org" });
+  assert.equal(p.posts[0].url, "https://admin.migadu.com/domains/9");
+  assert.deepEqual(JSON.parse(r.out).previous, ["old@x.org"]);
+});
+
+test("catchall set fails loudly when the panel did not apply it, and clearing needs --yes", async () => {
+  assert.match((await runWeb(["catchall", "set", "example.org", "-f", "destinations=a@x.org"], panel({ apply: false }))).err, /not applied/);
+  assert.match((await runWeb(["catchall", "set", "example.org"], panel())).err, /--yes/);
+});
