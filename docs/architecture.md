@@ -9,8 +9,8 @@ endpoints and, optionally, to a local password-manager program:
 
 ```
                      ┌────────────────────────────┐
-  user / script ───► │  migadu (Node.js, ESM)     │
-                     │  bin/migadu.js → src/cli.js│
+  user / script ───► │  migadu (native, Rust)     │
+                     │  main.rs → cli::run        │
                      └─────┬──────────┬───────────┘
                            │          │ spawn, no shell
         HTTPS Basic auth   │          └──► op · bw · pass · keepassxc-cli · security · secret-tool
@@ -26,17 +26,19 @@ same HTML forms a browser would submit), and the user's password manager CLI.
 ## Components and boundaries
 | File | Responsibility |
 | --- | --- |
-| `bin/migadu.js` | Entry point. Calls `main(process.argv.slice(2))` and sets the exit code. |
-| `src/cli.js` | Argument parsing (`util.parseArgs`), resource table, command dispatch, output (JSON or table), help text. The only place that prints. |
-| `src/api.js` | `createClient`: Basic-auth REST client with a 30 s timeout. Normalises errors into `MigaduError`. Treats a `DELETE` that returns HTTP 500 followed by a 404 on re-read as success. |
-| `src/secrets.js` | `resolveSecret` maps a reference (`op://…`, `bw:`, `pass:`, `keepassxc:`, `keychain:`) to a vendor CLI call. `run` spawns it without a shell. `loadCredentials` reads the environment. |
-| `src/web.js` | Admin-panel client: plan, catchall, spam settings and Bcc captures, through the session cookie. Verifies each write by re-reading the page. |
-| `src/forms.js` | Small HTML form reader. Returns what a browser would submit for a form, so a write can resend untouched fields. Strips HTML comments first. |
-| `test/` | Offline tests with mocked `fetch` and fake panel pages. |
+| `src/main.rs` | Entry point. Collects arguments and environment, wires real HTTP, process spawning and the terminal into `cli::run`, exits with its code. |
+| `src/cli.rs` | Argument parsing, resource table, command dispatch, output (JSON or table), help text. The only place that prints. |
+| `src/api.rs` | `Client`: Basic-auth REST client. Normalises errors to `METHOD path -> HTTP status: message`. Treats a `DELETE` that returns HTTP 500 followed by a 404 on re-read as success. |
+| `src/secrets.rs` | `resolve_secret` maps a reference (`op://…`, `bw:`, `pass:`, `keepassxc:`, `keychain:`) to a vendor CLI call, started without a shell. `load_credentials` reads the environment. |
+| `src/web.rs` | Admin-panel client: plan, catchall, spam settings and Bcc captures, through the session cookie. Verifies each write by re-reading the page. |
+| `src/html.rs` | Small HTML scanner and form reader. Returns what a browser would submit for a form, so a write can resend untouched fields. Strips HTML comments first. |
+| `src/http.rs` | The `Http` trait (the one seam to the network) and its real implementation on `ureq` with rustls: 30 s timeout, redirects not followed. |
+| `tests/` | Offline tests with a scripted `Http`, a fake password manager and fake panel pages. |
 
-Dependency direction: `bin → cli → {api, secrets, web}`, and `web → forms`. There are no third-party dependencies.
-Everything with side effects (`fetchImpl`, `exec`, `out`, `err`, `stdin`, `env`) is injected into `main`, which is
-what makes the CLI testable without network or processes.
+Dependency direction: `main → cli → {api, secrets, web}`, `web → html`, and everything that talks to the network goes
+through `http::Http`. The only third-party crates are `ureq` (HTTPS) and `serde_json`. Everything with a side effect
+(`Http`, `Exec`, the output sinks, standard input, the environment) is passed into `cli::run`, which is what makes the
+CLI testable without network or processes.
 
 ## Data flows and integration contracts
 1. **REST command** (`migadu mailboxes list -d example.org`): resolve credentials, build `GET /domains/example.org/mailboxes`,
@@ -57,6 +59,6 @@ sent only to Migadu over HTTPS, and are never printed or logged. The panel clien
 markup Migadu can change. See the [threat model](security/threat-model.md).
 
 ## Quality attributes
-- **Portability:** Node 22 or later; no native modules; tested on Ubuntu, macOS and Windows with Node 22 and 24.
+- **Portability:** one native binary per target (macOS, Linux and Windows; Intel/AMD and Arm); rustls instead of OpenSSL, so nothing needs installing; built and tested on Ubuntu, macOS and Windows.
 - **Safety:** deletes need `--yes`; panel writes are verified; unknown spam keys are rejected.
-- **Size:** about 500 lines of source, so the whole program can be read in an afternoon.
+- **Size:** about 1,500 lines of Rust and a 1.4 MB release binary, so the whole program can be read in an afternoon.

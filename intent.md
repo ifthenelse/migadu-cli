@@ -15,7 +15,7 @@ and small agencies that operate many client domains.
 - Create and manage mailboxes, aliases, rewrites, identities, forwardings and domains from a terminal or a script.
 - Reach the settings the REST API does not expose, through an opt-in admin-panel session.
 - Keep the API key out of dotfiles by reading it from a password manager at run time.
-- Run the same way on Windows, macOS and Linux with no runtime dependencies beyond Node.js (a stand-alone binary is planned).
+- Run the same way on Windows, macOS and Linux as one native binary with no runtime to install.
 
 ## Non-goals
 - Not an official Migadu product and not affiliated with Migadu.
@@ -28,7 +28,7 @@ and small agencies that operate many client domains.
 | Measure | Target | Source |
 | --- | --- | --- |
 | GitHub stars | 5 within 150 days of the first release | GitHub repository |
-| Release downloads | 50 within 150 days of the first release | GitHub release assets and npm, once published |
+| Release downloads | 50 within 150 days of the first release | GitHub release assets |
 | Outside issues or pull requests | at least 1 | GitHub |
 
 The targets come from the owner (GTM plan, 2026-11-24). They are deliberately small for a niche tool.

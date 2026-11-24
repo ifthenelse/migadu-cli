@@ -10,7 +10,7 @@ Manage your [Migadu](https://www.migadu.com) email hosting from the terminal on 
 [![Security](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml/badge.svg)](https://github.com/ifthenelse/migadu-cli/actions/workflows/security.yml)
 [![License](https://img.shields.io/github/license/ifthenelse/migadu-cli)](LICENSE)
 
-Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps the Migadu REST API so domains, mailboxes, aliases, identities, forwardings and rewrites are scriptable, and the API key never has to sit in a dotfile. It has zero npm dependencies and is not an official Migadu product.
+Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps the Migadu REST API so domains, mailboxes, aliases, identities, forwardings and rewrites are scriptable, and the API key never has to sit in a dotfile. It ships as one small native binary (about 1.4 MB, written in Rust) and is not an official Migadu product.
 
 ## Features
 
@@ -18,21 +18,22 @@ Migadu's admin panel is great for one mailbox and slow for forty. `migadu` wraps
 - **Password-manager credentials** — 1Password, Bitwarden, `pass`, KeePassXC, macOS Keychain and Linux Secret Service, read by calling each tool's CLI without a shell.
 - **Safe by default** — deletes need `--yes`, and the CLI confirms a delete that Migadu reports as HTTP 500 but actually performed.
 - **Tier report** — `migadu tier` shows your plan, renewal date and plan limits (read from the admin panel with a session cookie) plus per-domain API usage.
-- **Cross-platform, zero dependencies** — plain Node.js, tested on Linux, macOS and Windows in CI.
+- **One native binary** — no runtime to install; built and tested on Linux, macOS and Windows in CI, with two direct dependencies (an HTTPS client and a JSON library).
 
 ## Quickstart
 
-Requires Node.js 22 or newer and a [Migadu API key](https://admin.migadu.com/account/api/keys).
+You need a [Migadu API key](https://admin.migadu.com/account/api/keys). Download the archive for your system from the
+[latest release](https://github.com/ifthenelse/migadu-cli/releases/latest) (macOS, Linux and Windows, Intel/AMD and Arm),
+unpack it, and put `migadu` on your `PATH`. Check it against `SHA256SUMS` from the same release.
 
 ```sh
-git clone https://github.com/ifthenelse/migadu-cli.git
-cd migadu-cli
 export MIGADU_EMAIL=<your-admin-email>
 export MIGADU_API_KEY=<your-api-key>
-node bin/migadu.js domains list
+migadu domains list
 ```
 
-You should see the JSON list of domains on your account. Add `"bin"` to your `PATH`, or run `npm link` inside the clone, to call it as `migadu`.
+You should see the JSON list of domains on your account. To build from source instead, install [Rust](https://rustup.rs) 1.85
+or newer and run `cargo install --git https://github.com/ifthenelse/migadu-cli`.
 
 ## Usage
 
@@ -106,8 +107,8 @@ Windows Credential Manager has no built-in read CLI, so on Windows use 1Password
 ## Development
 
 ```sh
-npm test
-npm run lint
+cargo test          # offline tests with fake HTTP and password managers
+bash scripts/verify # fmt, clippy and tests: the same command CI runs
 ```
 
 ## Contributing
