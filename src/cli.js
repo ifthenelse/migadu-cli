@@ -22,6 +22,11 @@ Usage: migadu [options] <resource> <action> [args]
 
   tier                                     plan (needs MIGADU_WEB_COOKIE) and usage
   catchall get|set [domain]                catchall recipients (admin panel; needs MIGADU_WEB_COOKIE)
+  spam get|set [domain]                    spam filtering (admin panel; needs MIGADU_WEB_COOKIE)
+      keys: aggressiveness (3 permissive, 2 suspicious, 0 moderate, -2 aggressive, -3 paranoid),
+      subject_rewriting, junk_subject_keyword, sender_denylist, sender_junklist, sender_allowlist,
+      allowlist_precedence, recipient_denylist
+  bcc list|create|update|delete            bcc captures (admin panel; needs MIGADU_WEB_COOKIE)
   domains  list|get|create|update|records|diagnostics|usage|activate [name]
   mailboxes|aliases|rewrites  list|get|create|update|delete [id]
   identities|forwardings      list|get|create|update|delete <mailbox> [id]
@@ -107,7 +112,7 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
 
   try {
     const cookie = env.MIGADU_WEB_COOKIE || (env.MIGADU_WEB_COOKIE_REF && (await resolveSecret(env.MIGADU_WEB_COOKIE_REF, { exec })));
-    const web = (res === "tier" || res === "catchall") && cookie ? createWeb({ cookie, fetchImpl }) : null;
+    const web = (res === "tier" || res === "catchall" || res === "spam" || res === "bcc") && cookie ? createWeb({ cookie, fetchImpl }) : null;
     // `tier` may run on the web cookie alone; everything else needs API credentials.
     const creds = await loadCredentials(env, { exec }).catch((x) => { if (web) return null; throw x; });
     const client = creds ? createClient({ ...creds, fetchImpl }) : null;
@@ -126,6 +131,28 @@ export async function main(argv, { env = process.env, fetchImpl, exec, out = (s)
         if (!list.length && !values.yes) throw new Error("refusing to clear the catchall without --yes");
         result = await web.setCatchall(name, list);
       } else throw new Error("usage: migadu catchall get|set [domain] -f destinations=a@x.org,b@x.org");
+    } else if (res === "spam") {
+      if (!web) throw new Error("spam uses the admin panel: set MIGADU_WEB_COOKIE or MIGADU_WEB_COOKIE_REF");
+      const name = rest[0] ?? needDomain();
+      if (action === "get") result = await web.getSpam(name);
+      else if (action === "set") {
+        const changes = {};
+        for (const [k, v] of Object.entries(body ?? {})) changes[k] = v;
+        if (!Object.keys(changes).length) throw new Error("nothing to set: use -f aggressiveness=0 -f subject_rewriting:=true …");
+        result = await web.setSpam(name, changes);
+      } else throw new Error("usage: migadu spam get|set [domain] -f key=value");
+    } else if (res === "bcc") {
+      if (!web) throw new Error("bcc uses the admin panel: set MIGADU_WEB_COOKIE or MIGADU_WEB_COOKIE_REF");
+      const name = values.domain ?? env.MIGADU_DOMAIN ?? rest[0];
+      if (!name) throw new Error("domain required: use --domain or MIGADU_DOMAIN");
+      const arg = values.domain || env.MIGADU_DOMAIN ? rest[0] : rest[1];
+      if (action === "list") result = await web.listBcc(name);
+      else if (action === "create") result = await web.createBcc(name, body ?? {});
+      else if (action === "update" && arg) result = await web.updateBcc(name, arg, body ?? {});
+      else if (action === "delete" && arg) {
+        if (!values.yes) throw new Error(`refusing to delete bcc capture "${arg}" without --yes`);
+        result = await web.deleteBcc(name, arg);
+      } else throw new Error("usage: migadu bcc list|create|update <address>|delete <address> -d <domain> [-f address= -f destination= -f direction=]");
     } else if (res === "api") {
       if (!action || !rest[0]) throw new Error("usage: migadu api <METHOD> <path>");
       result = await client.request(action.toUpperCase(), rest[0].startsWith("/") ? rest[0] : "/" + rest[0], body);

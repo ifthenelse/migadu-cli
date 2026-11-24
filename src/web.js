@@ -1,5 +1,7 @@
 // Read-only access to the admin panel (server-rendered HTML) using a session cookie the user supplies.
 // shortcut: HTML regex parsing, breaks if Migadu changes the markup; upgrade to a real parser if it does.
+import { parseForm, setField, getField } from "./forms.js";
+
 export const PANEL = "https://admin.migadu.com";
 
 // Snapshot of the public plan table (admin.migadu.com/billing/subscription, 2026-11-24).
@@ -75,5 +77,120 @@ export function createWeb({ cookie, fetchImpl = globalThis.fetch }) {
     return { domain: name, previous, destinations: after, ...(after.join(",") !== destinations.join(",") && { note: "the panel stores catchall recipients as addresses on this domain" }) };
   }
 
-  return { page, plan, domains, getCatchall, setCatchall };
+  // --- generic form writes -------------------------------------------------------------------
+  async function post(action, fields, referer) {
+    const res = await fetchImpl(PANEL + action, {
+      method: "POST", redirect: "manual", body: new URLSearchParams(fields),
+      headers: { Cookie: cookie, "Content-Type": "application/x-www-form-urlencoded", Referer: PANEL + referer },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (res.status >= 400 || /login/.test(res.headers?.get?.("location") ?? "")) throw new Error(`panel rejected the change (HTTP ${res.status})`);
+  }
+
+  // Spam settings: cli name -> [form template page, panel field name]
+  const SPAM = {
+    aggressiveness: ["edit", "domain[aggressiveness_level]"], subject_rewriting: ["edit", "domain[subject_rewriting_enabled]"],
+    junk_subject_keyword: ["edit", "domain[junk_subject_keyword_spam]"],
+    sender_denylist: ["sender_denylist", "domain[sender_blacklist]"], sender_junklist: ["sender_denylist", "domain[sender_junklist]"],
+    sender_allowlist: ["sender_allowlist", "domain[sender_whitelist]"], allowlist_precedence: ["sender_allowlist", "domain[sender_whitelist_precedence]"],
+    recipient_denylist: ["recipient_denylist", "domain[recipient_blacklist]"],
+  };
+  const LIST_KEYS = new Set(["sender_denylist", "sender_junklist", "sender_allowlist", "recipient_denylist"]);
+  const tokens = (v) => String(v).split(/[\s,]+/).filter(Boolean);
+
+  async function spamForm(id, template) {
+    const form = parseForm(await page(`/domains/${id}/spam/${template}`), (body) => body.includes(`value="${template}"`));
+    if (!form) throw new Error(`spam form "${template}" not found (page layout changed or session invalid)`);
+    return form;
+  }
+
+  async function getSpam(name) {
+    const id = await domainId(name);
+    const out = { domain: name };
+    for (const template of new Set(Object.values(SPAM).map(([t]) => t))) {
+      const form = await spamForm(id, template);
+      for (const [k, [t, field]] of Object.entries(SPAM)) if (t === template) out[k] = LIST_KEYS.has(k) ? tokens(getField(form, field) ?? "") : getField(form, field);
+    }
+    return out;
+  }
+
+  async function setSpam(name, changes) {
+    for (const k of Object.keys(changes)) if (!SPAM[k]) throw new Error(`unknown spam setting "${k}" (use ${Object.keys(SPAM).join(", ")})`);
+    const id = await domainId(name);
+    const before = await getSpam(name);
+    for (const template of new Set(Object.keys(changes).map((k) => SPAM[k][0]))) {
+      const form = await spamForm(id, template);
+      for (const [k, v] of Object.entries(changes)) if (SPAM[k][0] === template) setField(form, SPAM[k][1], LIST_KEYS.has(k) ? tokens(v).join("\n") : v);
+      await post(form.action, form.fields, `/domains/${id}/spam/${template}`);
+    }
+    const after = await getSpam(name);
+    for (const [k, v] of Object.entries(changes)) {
+      const want = LIST_KEYS.has(k) ? tokens(v).join(",") : String(v), got = LIST_KEYS.has(k) ? after[k].join(",") : String(after[k]);
+      if (want !== got) throw new Error(`spam setting "${k}" not applied; current value is ${JSON.stringify(after[k])}`);
+    }
+    return { domain: name, previous: Object.fromEntries(Object.keys(changes).map((k) => [k, before[k]])), applied: changes };
+  }
+
+  // --- Bcc captures ---------------------------------------------------------------------------
+  const strip = (h) => unescape(h.replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+  const local = (a) => String(a).split("@")[0];
+
+  async function listBcc(name) {
+    const id = await domainId(name);
+    const html = (await page(`/domains/${id}/bccs`)).replace(/<!--[\s\S]*?-->/g, "");
+    return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].flatMap(([, row]) => {
+      const bid = /\/bccs\/(\d+)\/edit/.exec(row)?.[1];
+      if (!bid) return [];
+      const [address, direction, destination, expires, changed] = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((c) => strip(c[1]));
+      return [{ id: bid, address, direction, destination, expires, changed }];
+    });
+  }
+
+  const BCC = { address: "blind_copy[local_part]", destination: "blind_copy[bcc_local_part]", direction: "blind_copy[direction]" };
+  function applyBcc(form, fields) {
+    for (const [k, v] of Object.entries(fields)) {
+      if (!BCC[k]) throw new Error(`unknown bcc field "${k}" (use address, destination, direction)`);
+      if (k === "direction" && !["incoming", "outgoing", "all"].includes(v)) throw new Error("direction must be incoming, outgoing or all");
+      setField(form, BCC[k], k === "direction" ? v : local(v));
+    }
+  }
+
+  async function createBcc(name, fields) {
+    if (!fields.address || !fields.destination) throw new Error("bcc create needs -f address=<pattern> -f destination=<address> [-f direction=incoming|outgoing|all]");
+    const id = await domainId(name);
+    const form = parseForm(await page(`/domains/${id}/bccs/new`), (b) => b.includes("blind_copy["));
+    if (!form) throw new Error("bcc form not found (page layout changed or session invalid)");
+    applyBcc(form, { direction: "all", ...fields });
+    await post(form.action, form.fields, `/domains/${id}/bccs/new`);
+    const found = (await listBcc(name)).find((b) => b.address.split("@")[0] === local(fields.address));
+    if (!found) throw new Error("bcc capture was not created");
+    return found;
+  }
+
+  async function findBcc(name, address) {
+    const found = (await listBcc(name)).find((b) => b.address === address || b.address.split("@")[0] === local(address));
+    if (!found) throw new Error(`no bcc capture "${address}" on ${name}`);
+    return found;
+  }
+
+  async function updateBcc(name, address, fields) {
+    const id = await domainId(name), b = await findBcc(name, address);
+    const form = parseForm(await page(`/domains/${id}/bccs/${b.id}/edit`), (body) => body.includes("blind_copy["));
+    if (!form) throw new Error("bcc edit form not found");
+    applyBcc(form, fields);
+    await post(form.action, form.fields, `/domains/${id}/bccs/${b.id}/edit`);
+    return { previous: b, current: await findBcc(name, fields.address ?? address) };
+  }
+
+  async function deleteBcc(name, address) {
+    const id = await domainId(name), b = await findBcc(name, address);
+    const form = parseForm(await page(`/domains/${id}/bccs/${b.id}/delete`), (body) => body.includes('name="confirmation"'));
+    if (!form) throw new Error("bcc delete form not found");
+    setField(form, "confirmation", b.address); // the panel asks for the full captured address
+    await post(form.action, form.fields, `/domains/${id}/bccs/${b.id}/delete`);
+    if ((await listBcc(name)).some((x) => x.id === b.id)) throw new Error("bcc capture was not deleted");
+    return { deleted: b };
+  }
+
+  return { page, plan, domains, getCatchall, setCatchall, getSpam, setSpam, listBcc, createBcc, updateBcc, deleteBcc };
 }
