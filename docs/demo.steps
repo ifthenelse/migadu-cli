@@ -1,0 +1,16 @@
+# hide
+export HOME="$(mktemp -d)"
+export MIGADU_EMAIL=me@example.org MIGADU_DOMAIN=example.org
+export PS1='$ '
+clear
+# show
+# type-speed 25ms
+migadu domains list
+# sleep 1200ms
+MIGADU_API_KEY_REF=oops migadu domains list
+# sleep 1200ms
+export MIGADU_API_KEY=not-a-real-key
+migadu mailboxes delete hello
+# sleep 1200ms
+migadu domains list
+# sleep 2s

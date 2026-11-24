@@ -8,6 +8,9 @@ Applies to humans and coding agents alike.
 3. Run `scripts/verify` locally (needs [Rust](https://rustup.rs) 1.85 or newer). CI runs the same command on Linux, macOS and Windows and is the authoritative gate.
 4. Open a pull request: shared and production code enters only through a PR with required checks.
 
+## Demo GIF
+The README GIF is recorded from `docs/demo.steps` and `docs/demo.tape` with [VHS](https://github.com/charmbracelet/vhs): build the release binary, put it on your `PATH` (`export PATH="$PWD/target/release:$PATH"`), then run `vhs docs/demo.tape`. It only uses commands that need no account (a fake key gets a real 401 from Migadu). Re-record it when messages or output change.
+
 ## Commit convention
 Conventional Commits, see `.gitmessage.txt`: `type(scope)!: description`.
 Enable the template once: `git config commit.template .gitmessage.txt`.
