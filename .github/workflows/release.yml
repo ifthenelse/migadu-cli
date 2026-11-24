@@ -1,48 +1,83 @@
 name: Release
-# Push a tag like v0.2.0 (it must equal package.json "version") to build stand-alone binaries and publish a GitHub release.
+# Releases happen when package.json's version changes on main (or on demand): the workflow tags v<version>, builds
+# stand-alone binaries, packages them, and publishes a GitHub release. A pushed v* tag also works as a manual trigger.
 on:
-  push: { tags: ["v*"] }
+  push:
+    branches: [main]
+    paths: [package.json]
+    tags: ["v*"]
+  workflow_dispatch:
 permissions: { contents: read }
+concurrency: { group: release, cancel-in-progress: false }
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.p.outputs.tag }}
+      release: ${{ steps.p.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: p
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$tag" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json ($tag)"; exit 1
+          fi
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release $tag already exists; nothing to do"; echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
   verify:
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: 24 }
-      - name: Tag matches package.json version
-        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
       - run: bash scripts/verify
   build:
-    needs: verify
+    needs: [plan, verify]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 24 }
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with: { bun-version: 1.4.5 }
-      - name: Compile one binary per target
+      - name: Compile and package one archive per target
         run: |
-          mkdir dist
+          v="${{ needs.plan.outputs.tag }}"
+          mkdir dist stage
           for t in darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64; do
             ext=""; [ "$t" = windows-x64 ] && ext=".exe"
-            bun build --compile --target=bun-$t bin/migadu.js --outfile "dist/migadu-$t$ext"
+            d="stage/migadu-$v-$t"; mkdir -p "$d"
+            bun build --compile --target=bun-$t bin/migadu.js --outfile "$d/migadu$ext"
+            cp LICENSE README.md "$d/"
+            if [ "$t" = windows-x64 ]; then (cd stage && zip -qr "../dist/migadu-$v-$t.zip" "migadu-$v-$t")
+            else tar -C stage -czf "dist/migadu-$v-$t.tar.gz" "migadu-$v-$t"; fi
+            [ "$t" = linux-x64 ] && cp "$d/migadu" /tmp/migadu-linux-x64
           done
+          npm pack --silent --pack-destination dist
       - name: Smoke test the Linux binary
         run: |
-          ./dist/migadu-linux-x64 --help | head -n 3
-          out=$(MIGADU_EMAIL=a@b.c MIGADU_API_KEY=SUPERSECRET123 ./dist/migadu-linux-x64 domains list 2>&1 || true)
+          /tmp/migadu-linux-x64 --help | head -n 3
+          out=$(MIGADU_EMAIL=a@b.c MIGADU_API_KEY=SUPERSECRET123 /tmp/migadu-linux-x64 domains list 2>&1 || true)
           if echo "$out" | grep -q SUPERSECRET123; then echo "secret leaked"; exit 1; fi
       - name: Checksums
-        run: cd dist && sha256sum migadu-* > SHA256SUMS
+        run: cd dist && sha256sum * > SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with: { name: binaries, path: dist/*, if-no-files-found: error }
+        with: { name: release-files, path: dist/*, if-no-files-found: error }
   publish:
-    needs: build
+    needs: [plan, build]
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with: { name: binaries, path: dist }
-      - name: Create the release
+        with: { name: release-files, path: dist }
+      - name: Tag and publish the release
         env: { GH_TOKEN: "${{ github.token }}" }
-        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "${{ needs.plan.outputs.tag }}" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "${{ needs.plan.outputs.tag }}" --generate-notes
