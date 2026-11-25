@@ -30,6 +30,7 @@ Options:
   -y, --yes               confirm delete
   -o, --output json|table output format (default json)
   -h, --help
+  -V, --version
 
 Plan lookup reads the admin panel with a session cookie: MIGADU_WEB_COOKIE or MIGADU_WEB_COOKIE_REF.
 Credentials: MIGADU_EMAIL plus MIGADU_API_KEY or MIGADU_API_KEY_REF
@@ -51,6 +52,7 @@ struct Opts {
     yes: bool,
     output: String,
     help: bool,
+    version: bool,
     pos: Vec<String>,
 }
 
@@ -90,13 +92,11 @@ fn parse_args(args: &[String]) -> std::result::Result<Opts, String> {
                 "field" => o.field.push(take(&mut i, "-f, --field", inline)?),
                 "json" => o.json = Some(take(&mut i, "--json", inline)?),
                 "output" => o.output = take(&mut i, "-o, --output", inline)?,
-                "yes" | "help" if inline.is_none() => {
-                    if name == "yes" {
-                        o.yes = true
-                    } else {
-                        o.help = true
-                    }
-                }
+                "yes" | "help" | "version" if inline.is_none() => match name {
+                    "yes" => o.yes = true,
+                    "help" => o.help = true,
+                    _ => o.version = true,
+                },
                 _ => return Err(format!("Unknown option '--{name}'")),
             }
         } else {
@@ -109,6 +109,7 @@ fn parse_args(args: &[String]) -> std::result::Result<Opts, String> {
                 match c {
                     'y' => o.yes = true,
                     'h' => o.help = true,
+                    'V' => o.version = true,
                     'd' | 'f' | 'o' => {
                         let v = take(&mut i, &format!("-{c}"), inline)?;
                         match c {
@@ -360,6 +361,10 @@ pub fn run(
             return 2;
         }
     };
+    if o.version {
+        (io.out)(&format!("migadu {}", env!("CARGO_PKG_VERSION")));
+        return 0;
+    }
     let res = o.pos.first().cloned();
     if o.help || res.is_none() {
         (io.out)(HELP.trim_end_matches('\n'));

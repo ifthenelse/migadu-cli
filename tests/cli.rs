@@ -214,6 +214,29 @@ fn bad_options_exit_with_code_2() {
 }
 
 #[test]
+fn version_flag_prints_the_crate_version_and_needs_no_credentials() {
+    let want = format!("migadu {}", env!("CARGO_PKG_VERSION"));
+    for flag in ["--version", "-V"] {
+        let r = run_cli(&[flag], &env(&[]), &ok_empty(), &FakeExec::new());
+        assert_eq!(
+            (r.code, r.out.as_slice()),
+            (0, &[want.clone()][..]),
+            "{flag}"
+        );
+    }
+    assert_eq!(
+        run_cli(
+            &["domains", "list", "-V"],
+            &env(&[]),
+            &ok_empty(),
+            &FakeExec::new()
+        )
+        .out,
+        [want]
+    );
+}
+
+#[test]
 fn table_output_lists_scalar_columns() {
     let h = Fake::new(|_| {
         json_resp(

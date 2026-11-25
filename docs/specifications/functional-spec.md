@@ -20,6 +20,7 @@ Errors are one line on stderr, `error: <message>`. Output on stdout is JSON by d
 | `-y, --yes` | Confirms a delete or a clearing action. Without it the command refuses. |
 | `-o, --output json\|table` | Output format. `table` shows up to six scalar columns. |
 | `-h, --help` | Print usage. |
+| `-V, --version` | Print `migadu <version>` and exit; needs no credentials. |
 
 ## Configuration
 | Variable | Required | Meaning |
