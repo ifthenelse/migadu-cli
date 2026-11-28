@@ -1,13 +1,13 @@
 name: Release
-# Releases happen when the version in Cargo.toml changes on main (or on demand): the workflow tags v<version>,
-# builds native binaries for five targets, packages them, and publishes a GitHub release.
-# A pushed v* tag also works as a manual trigger.
+# On demand only: run it from the Actions tab (Run workflow) on main. It tags v<version> from Cargo.toml, builds native
+# binaries for five targets, packages them, and publishes a GitHub release. Does nothing if that release already exists.
 on:
-  push:
-    branches: [main]
-    paths: [Cargo.toml]
-    tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      draft:
+        description: Publish as a draft release (review it on GitHub before it goes public)
+        type: boolean
+        default: false
 permissions: { contents: read }
 concurrency: { group: release, cancel-in-progress: false }
 jobs:
@@ -23,8 +23,8 @@ jobs:
         run: |
           version=$(sed -n 's/^version *= *"\(.*\)"/\1/p' Cargo.toml | head -n1)
           tag="v$version"
-          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$tag" ]; then
-            echo "tag $GITHUB_REF_NAME does not match Cargo.toml ($tag)"; exit 1
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "releases are cut from main only (this run is on $GITHUB_REF)"; exit 1
           fi
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "release $tag already exists; nothing to do"; echo "release=false" >> "$GITHUB_OUTPUT"
@@ -91,5 +91,5 @@ jobs:
           cp target/package/*.crate dist/
           cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
       - name: Tag and publish the release
-        env: { GH_TOKEN: "${{ github.token }}" }
-        run: gh release create "${{ needs.plan.outputs.tag }}" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "${{ needs.plan.outputs.tag }}" --generate-notes
+        env: { GH_TOKEN: "${{ github.token }}", DRAFT: "${{ inputs.draft && '--draft' || '' }}" }
+        run: gh release create "${{ needs.plan.outputs.tag }}" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "${{ needs.plan.outputs.tag }}" --generate-notes $DRAFT

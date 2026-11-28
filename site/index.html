@@ -8,10 +8,12 @@
 :root{--bg:#fff;--fg:#0f172a;--mut:#475569;--acc:#0f766e;--code:#f1f5f9}
 @media(prefers-color-scheme:dark){:root{--bg:#0f172a;--fg:#f8fafc;--mut:#cbd5e1;--acc:#2dd4bf;--code:#1e293b}}
 body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:720px;margin:0 auto;padding:48px 16px}
+main{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:48px 16px}
+#ascii{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+p.hint{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mut)}
 img{width:96px;height:96px}pre{background:var(--code);padding:16px;border-radius:8px;overflow-x:auto;font-size:15px}
 a{color:var(--acc)}p.m{color:var(--mut)}
-</style></head><body><main>
+</style></head><body><canvas id="ascii" aria-hidden="true"></canvas><main>
 <picture><source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg"><img src="logo.svg" alt="migadu-cli logo"></picture>
 <h1>migadu-cli</h1>
 <p class="m">The maintained command line for Migadu: domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
@@ -24,4 +26,7 @@ migadu tier
 migadu mailboxes create -d example.org -f local_part=alice -f name=Alice -f password=&lt;secret&gt;</pre>
 <p>Works with 1Password, Bitwarden, pass, KeePassXC, macOS Keychain and Linux Secret Service.</p>
 <p><a href="https://github.com/ifthenelse/migadu-cli">Source, docs and issues on GitHub</a></p>
-</main></body></html>
+<p class="hint" aria-hidden="true">~ move the pointer over the Alps and the mail tokens; click to send an envelope ~</p>
+</main>
+<script src="ascii.js" defer></script>
+</body></html>

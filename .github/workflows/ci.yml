@@ -5,6 +5,18 @@ on:
   pull_request:
 permissions: { contents: read }
 jobs:
+  # Branching policy: pull requests come from <type>/<short-description> branches (or tool-created ones).
+  # GitHub rulesets cannot enforce branch names on personal repositories, so CI does.
+  branch-name:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - env: { HEAD_REF: "${{ github.head_ref }}" }
+        run: |
+          re='^((feat|fix|docs|ci|chore|refactor|test|perf|build|style|revert)/[a-z0-9._-]+|dependabot/.+|alert-autofix-[0-9]+|copilot/.+)$'
+          if ! printf '%s' "$HEAD_REF" | grep -Eq "$re"; then
+            echo "branch '$HEAD_REF' does not match <type>/<short-description> (types: feat fix docs ci chore refactor test perf build style revert)"; exit 1
+          fi
   verify:
     strategy:
       fail-fast: false
