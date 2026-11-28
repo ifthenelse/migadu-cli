@@ -6,6 +6,10 @@ User-visible and operationally material changes. Release notes with every commit
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-28
+### Added
+- Project site: interactive ASCII-art background (Migadu mail tokens, envelopes and an Alpine skyline that react to the pointer; still frame with reduced motion).
+
 ## [0.4.2] - 2026-11-28
 ### Changed
 - Releases and the Pages site are published on demand from the Actions tab instead of automatically; the release workflow can create a draft.
@@ -50,7 +54,8 @@ First published release (Node.js; versions before it were never tagged).
 - `migadu catchall`, `migadu spam` and `migadu bcc`, driven through the admin panel's forms.
 - Releases are tagged, built and published automatically when the version changes on `main`.
 
-[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.4...v0.4.0
