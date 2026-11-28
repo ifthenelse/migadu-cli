@@ -1,7 +1,16 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>migadu-cli</title>
-<meta name="description" content="The maintained command line for Migadu email hosting, for Windows, macOS and Linux.">
+<title>migadu-cli: a command line for Migadu email hosting</title>
+<meta name="description" content="An unofficial command line for Migadu email hosting, for Windows, macOS and Linux.">
+<link rel="canonical" href="https://ifthenelse.github.io/migadu-cli/">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="migadu-cli">
+<meta property="og:description" content="An unofficial command line for Migadu email hosting, for Windows, macOS and Linux.">
+<meta property="og:url" content="https://ifthenelse.github.io/migadu-cli/">
+<meta property="og:image" content="https://ifthenelse.github.io/migadu-cli/social.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"migadu-cli","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Linux, Windows","license":"https://opensource.org/license/mit","url":"https://ifthenelse.github.io/migadu-cli/","downloadUrl":"https://github.com/ifthenelse/migadu-cli/releases/latest","codeRepository":"https://github.com/ifthenelse/migadu-cli","description":"Unofficial command line for Migadu email hosting."}</script>
 <link rel="icon" href="logo.svg" media="(prefers-color-scheme: light)">
 <link rel="icon" href="logo-dark.svg" media="(prefers-color-scheme: dark)">
 <style>
@@ -12,19 +21,29 @@ main{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:48px 16px
 #ascii{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 p.hint{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mut)}
 img{width:96px;height:96px}pre{background:var(--code);padding:16px;border-radius:8px;overflow-x:auto;font-size:15px}
-a{color:var(--acc)}p.m{color:var(--mut)}
+a{color:var(--acc)}h2{font-size:20px;margin:32px 0 4px}p.m{color:var(--mut)}
 </style></head><body><canvas id="ascii" aria-hidden="true"></canvas><main>
 <picture><source media="(prefers-color-scheme: dark)" srcset="logo-dark.svg"><img src="logo.svg" alt="migadu-cli logo"></picture>
 <h1>migadu-cli</h1>
-<p class="m">The maintained command line for Migadu: domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
+<p class="m">An unofficial command line for Migadu: domains, mailboxes, aliases, identities, forwardings and rewrites from the terminal. API keys come from your password manager.</p>
+<p class="m">Download a ready-made binary for macOS, Linux or Windows from the <a href="https://github.com/ifthenelse/migadu-cli/releases/latest">latest release</a>, or build it with Rust:</p>
 <pre>cargo install --git https://github.com/ifthenelse/migadu-cli
 migadu mailboxes list -d example.org</pre>
-<p class="m">Or download a ready-made binary for macOS, Linux or Windows from the <a href="https://github.com/ifthenelse/migadu-cli/releases/latest">latest release</a>.</p>
 <pre>export MIGADU_EMAIL=you@example.org
 export MIGADU_API_KEY_REF="op://Private/Migadu/credential"
 migadu tier
 migadu mailboxes create -d example.org -f local_part=alice -f name=Alice -f password=&lt;secret&gt;</pre>
 <p>Works with 1Password, Bitwarden, pass, KeePassXC, macOS Keychain and Linux Secret Service.</p>
+<h2>How do I create a Migadu mailbox from the command line?</h2>
+<p>Export <code>MIGADU_EMAIL</code> and <code>MIGADU_API_KEY</code> (or <code>MIGADU_API_KEY_REF</code>), then run <code>migadu mailboxes create -d example.org -f local_part=alice -f name=Alice -f password=&lt;secret&gt;</code>. Migadu's API needs a plan that includes it (not Micro).</p>
+<h2>Where does the API key live?</h2>
+<p>In your password manager. <code>op://</code>, <code>bw:</code>, <code>pass:</code>, <code>keepassxc:</code> and <code>keychain:</code> references are resolved by running that tool without a shell. Nothing is stored.</p>
+<h2>Does it work on my system?</h2>
+<p>There is one native binary for macOS (Arm and Intel), Linux (x64 and Arm) and Windows, with checksums on each <a href="https://github.com/ifthenelse/migadu-cli/releases/latest">release</a>.</p>
+<h2>What can it not do?</h2>
+<p>Domain aliases are not implemented. Plan, catchall, spam and Bcc settings use your admin-panel session cookie and may break when Migadu changes the page. It is unofficial and not affiliated with Migadu.</p>
+<h2>How is it different from the Terraform provider, the MCP server or migaman?</h2>
+<p>Terraform declares state, the MCP server is for AI assistants, and migaman manages aliases only. This is a terminal tool for the other mailbox, forwarding, rewrite and domain tasks.</p>
 <p><a href="https://github.com/ifthenelse/migadu-cli">Source, docs and issues on GitHub</a></p>
 <p class="hint" aria-hidden="true">~ move the pointer over the Alps and the mail tokens; click to send an envelope ~</p>
 </main>

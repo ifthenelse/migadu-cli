@@ -6,6 +6,10 @@ User-visible and operationally material changes. Release notes with every commit
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-28
+### Changed
+- Project site: descriptive title, canonical link, social-sharing tags with a preview image, sitemap, structured data and an FAQ with prerequisites and limits; the release download is shown before the source install.
+
 ## [0.4.3] - 2026-11-28
 ### Added
 - Project site: interactive ASCII-art background (Migadu mail tokens, envelopes and an Alpine skyline that react to the pointer; still frame with reduced motion).
