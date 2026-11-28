@@ -6,6 +6,11 @@ User-visible and operationally material changes. Release notes with every commit
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-28
+### Changed
+- Releases and the Pages site are published on demand from the Actions tab instead of automatically; the release workflow can create a draft.
+- Branching policy documented; release tags are protected.
+
 ## [0.4.1] - 2026-11-28
 ### Changed
 - Ignore stray build artifacts and private promotional files; track the shared Codex MCP config.
@@ -45,7 +50,8 @@ First published release (Node.js; versions before it were never tagged).
 - `migadu catchall`, `migadu spam` and `migadu bcc`, driven through the admin panel's forms.
 - Releases are tagged, built and published automatically when the version changes on `main`.
 
-[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/ifthenelse/migadu-cli/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/ifthenelse/migadu-cli/compare/v0.3.3...v0.3.4
