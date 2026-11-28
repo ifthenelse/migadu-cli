@@ -19,3 +19,9 @@ xcuserdata/
 .specstory/
 .claude/settings.local.json
 .claude/worktrees/
+# Stray artifacts from tooling
+*.bun-build
+# Promotional and go-to-market strategy: private, not part of the product
+.promo/
+docs/gtm-plan.md
+.claude/gtm-planner.local.md
