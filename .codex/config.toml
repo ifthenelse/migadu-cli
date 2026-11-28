@@ -1,0 +1,11 @@
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = [
+    "-y",
+    "chrome-devtools-mcp@0.21.0",
+    "--isolated=true",
+    "--no-usage-statistics",
+]
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
