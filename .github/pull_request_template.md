@@ -8,5 +8,5 @@
 
 ## Docs
 - [ ] README / docs / ADR / CHANGELOG updated where needed
-- [ ] `version` in `Cargo.toml` bumped per semver (publishes a release when merged)
+- [ ] `version` in `Cargo.toml` bumped per semver (a release is cut separately, on demand)
 - [ ] Dependency or lockfile changes reviewed

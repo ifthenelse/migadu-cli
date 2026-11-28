@@ -25,7 +25,7 @@
   MAJOR for a backwards-incompatible change to commands, options, output or configuration; MINOR for backwards-compatible
   functionality; PATCH for fixes, documentation, CI and other changes that leave behaviour untouched. While the major
   version is 0, anything may change, but still bump MINOR for breaking changes and PATCH otherwise.
-  Release tags are `vMAJOR.MINOR.PATCH` and must equal that field (the release workflow enforces it).
+  Releases are on demand (Actions → Release); the tag `vMAJOR.MINOR.PATCH` comes from that field. Branches are named `<type>/<short-description>`.
 - Never commit secrets or `.env` files. `.env.example` holds names and safe placeholders only.
 
 ## Approval boundaries

@@ -3,7 +3,7 @@
 Applies to humans and coding agents alike.
 
 ## Workflow
-1. Branch from `main` (or use a git worktree per task; never share one working copy between two agents).
+1. Branch from `main`, named `<type>/<short-description>` (`feat/`, `fix/`, `docs/`, `ci/`, `chore/`, `refactor/`, `test/`); see the branching policy in [docs/deployment.md](docs/deployment.md) (or use a git worktree per task; never share one working copy between two agents).
 2. Make a focused change; keep unrelated refactors out.
 3. Run `scripts/verify` locally (needs [Rust](https://rustup.rs) 1.85 or newer). CI runs the same command on Linux, macOS and Windows and is the authoritative gate.
 4. Open a pull request: shared and production code enters only through a PR with required checks.
@@ -19,7 +19,7 @@ Enable the template once: `git config commit.template .gitmessage.txt`.
 - Description of the change and its reason; link to the related decision or ticket.
 - `scripts/verify` green; tests added or updated for changed behaviour.
 - Docs, ADR or changelog updated when behaviour, contracts or architecture change.
-- `version` in `Cargo.toml` bumped following [semver 2.0.0](https://semver.org/) (see `AGENTS.md`); merging a version change publishes a release.
+- `version` in `Cargo.toml` bumped following [semver 2.0.0](https://semver.org/) (see `AGENTS.md`). A release is published separately, on demand, by the maintainer.
 - Dependency changes reviewed explicitly (new crates, version bumps, `Cargo.lock` diff).
 
 ## Review roles
